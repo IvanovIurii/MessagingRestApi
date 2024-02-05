@@ -40,9 +40,15 @@ NOTE: launch docker after it was installed.
 
 ### Steps to run
 
-1. Execute command in project directory to init DB and start RabbitMq: `docker-compose up`
-2. Run the application: `mvn spring-boot:run`
-3. Open the page: http://localhost:8080/swagger-ui/index.html
+1. Perform command: `chmod 755 ./init-database.sh`
+2. Execute command in project directory to init DB and start RabbitMq: `docker-compose up`
+3. Run the application: `mvn spring-boot:run`
+4. Open the page: http://localhost:8080/swagger-ui/index.html
+
+NOTE: without `chmod 755 ./init-datbase.sh` there is a permission error in the container. If this command is not
+executed before (!) `docker-compose up`, DB `app_db` will not be created! So if that still happened, please,
+delete `postgres:15` container first and do it again (without removing the container docker will just reuse an old one
+without running `init-database.sh` script).
 
 ### TESTS
 
