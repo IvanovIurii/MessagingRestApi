@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  postgresdb:
+    image: postgres:15
+    environment:
+      # I know what I am doing, and I want to use system user to connect to DB, yes
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+    ports:
+      - 5432:5432
+    volumes:
+      - ./init-database.sh:/docker-entrypoint-initdb.d/init-database.sh
+
+  rabbitmq:
+    image: rabbitmq:3.10-management
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    ports:
+      - 5672:5672
+      - 15672:15672
+

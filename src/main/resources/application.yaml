@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/app_db
+    username: user
+    password: password
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: user
+    password: password
+
+    listener:
+      simple:
+        default-requeue-rejected: false
