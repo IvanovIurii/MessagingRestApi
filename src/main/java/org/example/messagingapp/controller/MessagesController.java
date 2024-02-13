@@ -1,5 +1,6 @@
 package org.example.messagingapp.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.example.messagingapp.dto.MessageDto;
 import org.example.messagingapp.dto.SendMessageDto;
@@ -31,32 +32,39 @@ public class MessagesController {
         this.messagesReceiveService = messagesReceiveService;
     }
 
+    @Operation(summary = "Send a message from one user to another")
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping(value = "/messages", consumes = APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/messages", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<MessageSendResponse> sendMessage(@Valid @RequestBody SendMessageDto sendMessageDto, @RequestHeader("USER_ID") UUID senderId) {
         UUID recipientId = sendMessageDto.getRecipientId();
         if (recipientId.equals(senderId)) {
             throw new IllegalArgumentException("Sender and recipient can not be te same");
         }
-        Message message = new Message(null, senderId, recipientId, sendMessageDto.getMessage());
+        Message message = new Message(senderId, recipientId, sendMessageDto.getMessage());
         messagesSendService.sendMessage(message);
 
         MessageSendResponse response = new MessageSendResponse("Message was sent to recipient");
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Get all received messages")
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/messages/received", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MessageDto>> getAllReceivedMessages(@RequestHeader("USER_ID") UUID userId) {
         List<MessageDto> messages = convertMessagesToMessageDtoList(messagesReceiveService.getAllReceivedMessages(userId));
         return ResponseEntity.ok(messages);
     }
 
+    @Operation(summary = "Get all sent messages")
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/messages/sent", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MessageDto>> getAllSentMessages(@RequestHeader("USER_ID") UUID userId) {
         List<MessageDto> messages = convertMessagesToMessageDtoList(messagesReceiveService.getAllSentMessages(userId));
         return ResponseEntity.ok(messages);
     }
 
+    @Operation(summary = "Get all received messages from an exact user")
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/messages/received/{senderId}", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MessageDto>> getAllReceivedMessagesFromSpecificSender(@PathVariable UUID senderId, @RequestHeader("USER_ID") UUID userId) {
         List<MessageDto> messages = convertMessagesToMessageDtoList(messagesReceiveService.getAllReceivedMessagesFromSpecificSender(userId, senderId));
@@ -65,10 +73,13 @@ public class MessagesController {
 
     private List<MessageDto> convertMessagesToMessageDtoList(List<Message> messages) {
         return messages.stream()
-                .map(message -> new MessageDto(message.message()))
+                .map(message -> new MessageDto(
+                        message.getMessage(),
+                        message.getTimestamp().toString())
+                )
                 .toList();
     }
 
-    private record MessageSendResponse(String message) {
+    private record MessageSendResponse(String statusMessage) {
     }
 }

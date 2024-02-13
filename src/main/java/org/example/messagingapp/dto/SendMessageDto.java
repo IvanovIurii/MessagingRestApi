@@ -11,6 +11,9 @@ public class SendMessageDto {
     @NotBlank
     private String message;
 
+    public SendMessageDto() {
+    }
+
     public SendMessageDto(UUID recipientUuid, String message) {
         this.recipientId = recipientUuid;
         this.message = message;

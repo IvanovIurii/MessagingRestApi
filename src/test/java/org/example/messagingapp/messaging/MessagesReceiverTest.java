@@ -6,9 +6,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.UUID;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -28,9 +27,7 @@ class MessagesReceiverTest {
 
     @Test
     public void shouldSaveMessageOnReceive() {
-        UUID senderId = UUID.randomUUID();
-        UUID recipientId = UUID.randomUUID();
-        Message message = new Message(null, senderId, recipientId, "test");
+        Message message = Mockito.mock(Message.class);
 
         sut.onMessageReceived(message);
 

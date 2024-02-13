@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,7 +18,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class MessagesReceiveServiceTest extends BaseIntegrationTest {
+class MessagesReceiveServiceIntegrationTest extends BaseIntegrationTest {
+
+    private final static LocalDateTime FIXED_TIMESTAMP = LocalDateTime.parse("2024-02-13T14:20:30");
 
     @Autowired
     private UserRepository userRepository;
@@ -38,34 +41,37 @@ class MessagesReceiveServiceTest extends BaseIntegrationTest {
         sender2 = userRepository.save(new User(null, "sender2"));
         recipient1 = userRepository.save(new User(null, "recipient1"));
 
-        Message message1 = new Message(null, sender1.id(), recipient1.id(), "message1");
-        Message message2 = new Message(null, sender1.id(), recipient1.id(), "message2");
-        Message message3 = new Message(null, sender2.id(), recipient1.id(), "message3");
-        Message message4 = new Message(null, recipient1.id(), sender2.id(), "message4");
+        Message message1 = new Message(sender1.id(), recipient1.id(), "message1");
+        Message message2 = new Message(sender1.id(), recipient1.id(), "message2");
+        Message message3 = new Message(sender2.id(), recipient1.id(), "message3");
+        Message message4 = new Message(recipient1.id(), sender2.id(), "message4");
 
-        List.of(message1, message2, message3, message4).forEach(message ->
-                messagesReceiveService.saveMessage(message)
+        List.of(message1, message2, message3, message4).forEach(message -> {
+                    message.setTimestamp(FIXED_TIMESTAMP);
+                    messagesReceiveService.saveMessage(message);
+                }
         );
     }
 
     @Test
     public void shouldSaveMessage() {
-        List<Message> messages = messageRepository.findAllBySenderId(sender1.id());
-        assertEquals("message1", messages.get(0).message());
+        List<Message> messages = messageRepository.findAllBySenderId(sender2.id());
+        assertEquals("message3", messages.get(0).getMessage());
+        assertEquals(FIXED_TIMESTAMP, messages.get(0).getTimestamp());
     }
 
     @Test
     public void shouldGetAllReceivedMessages() {
         List<Message> messages = messagesReceiveService.getAllReceivedMessages(recipient1.id());
         assertEquals(3, messages.size());
-        assertTrue(messages.stream().map(Message::message).toList().containsAll(List.of("message1", "message2", "message3")));
+        assertTrue(messages.stream().map(Message::getMessage).toList().containsAll(List.of("message1", "message2", "message3")));
     }
 
     @Test
     public void shouldGetAllSentMessages() {
         List<Message> messages = messagesReceiveService.getAllSentMessages(sender1.id());
         assertEquals(2, messages.size());
-        assertTrue(messages.stream().map(Message::message).toList().containsAll(List.of("message1", "message2")));
+        assertTrue(messages.stream().map(Message::getMessage).toList().containsAll(List.of("message1", "message2")));
     }
 
     @Test
@@ -90,7 +96,7 @@ class MessagesReceiveServiceTest extends BaseIntegrationTest {
     public void shouldGetAllReceivedMessagesFromSpecificUser() {
         List<Message> messages = messagesReceiveService.getAllReceivedMessagesFromSpecificSender(recipient1.id(), sender2.id());
         assertEquals(1, messages.size());
-        assertTrue(messages.stream().map(Message::message).toList().contains("message3"));
+        assertTrue(messages.stream().map(Message::getMessage).toList().contains("message3"));
     }
 
     @Test

@@ -5,10 +5,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-
-import java.util.UUID;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -28,9 +27,7 @@ class MessagesPublisherTest {
 
     @Test
     public void shouldPublishMessage() {
-        UUID senderId = UUID.randomUUID();
-        UUID recipientId = UUID.randomUUID();
-        Message message = new Message(null, senderId, recipientId, "test");
+        Message message = Mockito.mock(Message.class);
 
         sut.publishMessage(message);
 

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -18,6 +19,8 @@ import static org.example.messagingapp.configuration.RabbitMqProperties.DEAD_LET
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class MessagesIntegrationTest extends BaseIntegrationTest {
+
+    private final static LocalDateTime FIXED_TIMESTAMP = LocalDateTime.parse("2024-02-13T14:20:30");
 
     private static final int TIMEOUT = 3000;
 
@@ -38,20 +41,22 @@ class MessagesIntegrationTest extends BaseIntegrationTest {
         UUID senderId = userService.createUser(new User(null, "sender")).id();
         UUID recipientId = userService.createUser(new User(null, "recipient")).id();
 
-        Message test = new Message(null, senderId, recipientId, "test");
-        messagesPublisher.publishMessage(test);
+        Message message = new Message(senderId, recipientId, "test");
+        message.setTimestamp(FIXED_TIMESTAMP);
+
+        messagesPublisher.publishMessage(message);
 
         await().atMost(TIMEOUT, TimeUnit.MILLISECONDS)
                 .until(() -> messageRepository.findAllBySenderId(senderId).size() == 1);
 
-        Message message = messageRepository.findAllBySenderId(senderId).get(0);
-        assertEquals(recipientId, message.recipientId());
-        assertEquals("test", message.message());
+        message = messageRepository.findAllBySenderId(senderId).get(0);
+        assertEquals(recipientId, message.getRecipientId());
+        assertEquals("test", message.getMessage());
     }
 
     @Test
     public void shouldPublishInvalidMessageToDLQ() {
-        Message test = new Message(null, null, null, "test");
+        Message test = new Message(null, null, "test");
         messagesPublisher.publishMessage(test);
 
         AtomicReference<Message> messageAtomicReference = new AtomicReference<>();
@@ -62,6 +67,6 @@ class MessagesIntegrationTest extends BaseIntegrationTest {
         );
 
         Message message = messageAtomicReference.get();
-        assertEquals("test", message.message());
+        assertEquals("test", message.getMessage());
     }
 }

@@ -1,5 +1,6 @@
 package org.example.messagingapp.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import org.example.messagingapp.dto.CreateUserDto;
 import org.example.messagingapp.model.User;
@@ -25,14 +26,17 @@ public class UsersController {
         this.userService = userService;
     }
 
+    @Operation(summary = "Get all available users")
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping(value = "/users", produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<List<User>> getUsers() {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
+    @Operation(summary = "Create user")
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping(value = "/users", consumes = APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/users", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<User> createUser(@Valid @RequestBody CreateUserDto createUserDto) {
         User user = new User(null, createUserDto.getEmail());
         User createdUser = userService.createUser(user);
